@@ -36,19 +36,36 @@
                     <a class="item active" tag="status">
                         <i class="simplistic info circle icon"></i>Status
                     </a>
+
+                    <div class="ui divider menudivider">Reverse Proxy</div>
+
+                    <a class="item" tag="proxy_layer4">
+                        <i class="simplistic folder icon"></i> TCP/UDP Proxy
+                    </a>
+                    <a class="item" tag="proxy_layer5_http">
+                        <i class="simplistic exchange icon"></i> HTTP Proxy
+                    </a>
+                    <a class="item" tag="setroot">
+                        <i class="simplistic home icon"></i> Set Proxy Root
+                    </a>
+
+                    <div class="ui divider menudivider">Legacy Proxy</div>
+
                     <a class="item" tag="vdir">
                         <i class="simplistic folder icon"></i> Virtual Directory
                     </a>
                     <a class="item" tag="subd">
                         <i class="simplistic sitemap icon"></i> Subdomain Proxy
                     </a>
+                    <a class="item" tag="tcpprox">
+                        <i class="simplistic exchange icon"></i> TCP Proxy
+                    </a>
                     <a class="item" tag="rules">
                         <i class="simplistic plus square icon"></i> Create Proxy Rules
                     </a>
-                    <a class="item" tag="setroot">
-                        <i class="simplistic home icon"></i> Set Proxy Root
-                    </a>
+
                     <div class="ui divider menudivider">Access & Connections</div>
+
                     <a class="item" tag="cert">
                         <i class="simplistic lock icon"></i> TLS / SSL certificates
                     </a>
@@ -58,17 +75,18 @@
                     <a class="item" tag="access">
                         <i class="simplistic ban icon"></i> Access Control
                     </a>
+
                     <div class="ui divider menudivider">Bridging</div>
+
                     <a class="item" tag="gan">
                         <i class="simplistic globe icon"></i> Global Area Network
                     </a>
                     <a class="item" tag="zgrok">
                         <i class="simplistic podcast icon"></i> Service Expose Proxy
                     </a>
-                    <a class="item" tag="tcpprox">
-                        <i class="simplistic exchange icon"></i> TCP Proxy
-                    </a>
-                    <div class="ui divider menudivider">Others</div>
+
+                    <div class="ui divider menudivider">Tools</div>
+
                     <a class="item" tag="webserv">
                         <i class="simplistic globe icon"></i> Static Web Server
                     </a>
@@ -92,6 +110,12 @@
                 <div id="status" class="functiontab" target="status.html" style="display: block ;">
                     <br><br><div class="ui active centered inline loader"></div>
                 </div>
+                
+                <!-- Layer 4 Proxy Tab -->
+                <div id="proxy_layer4" class="functiontab" target="proxy_layer4.html"></div>
+
+                <!-- Layer 5 HTTP Proxy Tab -->
+                <div id="proxy_layer5_http" class="functiontab" target="proxy_layer5_http.html"></div>
 
                 <!-- Virtual Directory Tab -->
                 <div id="vdir" class="functiontab" target="vdir.html"></div>

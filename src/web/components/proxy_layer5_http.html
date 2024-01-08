@@ -1,0 +1,197 @@
+<div class="standardContainer">
+    <div class="ui basic segment">
+        <h2>HTTP(S) Proxy (Layer 5)</h2>
+        <p>Proxy packets at the OSI model Layer 5 (session) using HTTP/HTTPS</p>
+    </div>
+    <div style="width: 100%; overflow-x: auto; margin-bottom: 1em;">
+        <table class="ui celled sortable unstackable compact table">
+            <thead>
+                <tr>
+                    <th class="narrow" rowspan="2"><i class="ui icon large power"></i></th>
+                    <th class="narrow" rowspan="2"><i class="ui icon large expeditedssl"></i></th>
+                    <th class="narrow" rowspan="2"><i class="ui icon large lock"></i></th>
+                    <th>Host</th>
+                    <th>Dest</th>
+                    <th class="no-sort narrow" rowspan="2">Actions</th>
+                </tr>
+                <tr>
+                    <th class="no-sort" colspan="2">Virtual Directory</th>
+                </tr>
+            </thead>
+            <tbody id="layer5_http_tbody"></tbody>
+            <tfoot>
+                <tr>
+                    <td><i class="ui icon large power green"></i></td>
+                    <td><i class="ui icon large expeditedssl green"></i></th>
+                    <td><i class="ui icon large lock green"></i></td>
+                    <td><div class="ui input"><input type="text" placeholder="subdomain.host.tld"></div></td>
+                    <td><div class="ui input"><input type="text" placeholder="subdomain.host.tld:port"></div></td>
+                    <td><button class="ui circular mini basic icon button green editBtn"><i class="plus circle icon"></i></button></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+    <button class="ui icon right floated basic button devButton"><i class="orange refresh icon"></i> DevData</button>
+    <button class="ui icon right floated basic button" onclick="listVdirs();"><i class="green refresh icon"></i> Refresh</button>
+    <br><br>
+</div>
+<style>
+    tfoot div {
+        width: 100%;
+    }
+    tfoot div input {
+        width: 100%;
+    }
+    tr i.icon > span {
+        display: none;
+    }
+    .narrow {
+        width: 32px;
+    }
+    .table-icon {
+        width: 28px;
+    }
+</style>
+<script>
+    // https://semantic-ui.com/elements/icon.html#/icon
+
+(()=>{ // Wrap everything to not clutter the browsers document root with functions
+    const developmentRecords = [
+        { // First Entry shows all the settings and their defaults
+            enabled: true, tls: true, auth:0, host:'test1.host.tld', 
+            dest: [
+                {enabled:true,tls:false,host:'127.0.0.1:1234',uri:undefined}, // Multiple to support failover / load balancing
+            ],
+            locations: [
+                { enabled:true, uri:'/_matrix/client', dest: [
+                    {enabled:true,tls:false,host:'127.0.0.1:1234',uri:undefined},
+                    {enabled:false,tls:false,host:'127.0.0.1:1234',uri:undefined},
+                ],},
+                { enabled:true, uri:'/.wellknown/carddav', dest: [
+                    {enabled:true,tls:false,host:'127.0.0.1:1234',uri:undefined},
+                ],},
+                { enabled:true, uri:'/.wellknown/caldav', dest: [
+                    {enabled:true,tls:false,host:'127.0.0.1:1234',uri:undefined},
+                ],},
+            ], 
+            config: {
+                basicAuthUsers: [{uuid:'5cc724c3-d4b2-426e-baa8-d97ca07c81f5',name:'test1',pass:'serversideonly',enabled:true,},{uuid:'a4fcd479-1e2e-4eb4-b54a-b2d2ced080e2',name:'test2',pass:'serversideonly',enabled:false},],
+                basicAuthGroups: [{uuid:'1b0f261c-e991-4bfe-9ec8-eb0c0751c1f1',name:'group1',enabled:true}],
+                authService: {
+                    url: '',
+                    headers: [],
+                },
+                timeouts: {
+                    connect: 60000,
+                    read: 300000,
+                    send: 300000,
+                },
+                uptime: {
+                    enabled: true,
+                    url: undefined, // Alternate URL for heartbeat
+                },
+                statistics: {
+                    // Something
+                },
+            }
+        },
+        {enabled: true, tls: true, auth:0, host:'test2.host.tld', dest:[{enabled:true,tls:false,host:'127.0.0.1:1234',uri:undefined}]},
+        {enabled: true, tls: false, auth:1, host:'test3.host.tld', dest:[{enabled:true,tls:false,host:'127.0.0.1:1234',uri:undefined}]},
+        {enabled: false, tls: true, auth:0, host:'test4.host.tld', locations: [{ enabled:true, uri:'/_matrix/client', dest: [{enabled:true,tls:false,host:'127.0.0.1:1234',uri:undefined},],},], dest:[{enabled:true,tls:false,host:'127.0.0.1:1234',uri:undefined},{enabled:true,tls:false,host:'127.0.0.1:1234',uri:undefined},]},
+        {enabled: true, tls: true, auth:2, host:'test5.host.tld', dest:[{enabled:true,tls:false,host:'127.0.0.1:1234',uri:undefined}]},
+        {enabled: false, tls: false, auth:0, host:'test6.host.tld', dest:[{enabled:true,tls:false,host:'127.0.0.1:1234',uri:undefined}]},
+        {enabled: true, tls: true, auth:1, host:'test7.host.tld', dest:[{enabled:true,tls:false,host:'127.0.0.1:1234',uri:undefined}]},
+        {enabled: false, tls: true, auth:2, host:'test8.host.tld', locations: [{ enabled:true, uri:'/_matrix/client', dest: [{enabled:true,tls:false,host:'127.0.0.1:4321',uri:'/_matrix/element'},],},{ enabled:false, uri:'/_matrix/federation', dest: [{enabled:true,tls:false,host:'127.0.0.1:1234',uri:undefined},],},], dest:[{enabled:true,tls:false,host:'127.0.0.1:1234',uri:undefined}]},
+        {enabled: true, tls: true, auth:0, host:'test9.host.tld', dest:[{enabled:true,tls:false,host:'127.0.0.1:1234',uri:undefined}]},
+    ];
+
+    const genForwarderList = function(records=[], defaultURI = '') {
+        return records.map((v,i,a)=>{
+            return `<i class="icon arrow right ${v.enabled?'green':'red'}"></i>${v.tls?'https://':'http://'}${v.host}${v.uri||defaultURI}`
+        }).join('<br>');
+    }
+
+    const listRecords = function(records=[]) {
+        const table = document.querySelector('#layer5_http_tbody');
+        
+        // Clear Data
+        table.innerHTML = '';
+
+        records.forEach((v,i,a)=>{
+            // Generate the primary row
+            const row = document.createElement('tr');
+            const nestedRows = (v.locations || []).length + 1;
+            row.innerHTML = `
+                <td rowspan="${nestedRows}"><i class="ui icon large power ${v.enabled?'green':'red'}"><span>${v.enabled?'1':'0'}</span></i></td>
+                <td rowspan="${nestedRows}"><i class="ui icon large expeditedssl ${v.tls?'green':'red'}"><span>${v.tls?'1':'0'}</span></i></td>
+                <td rowspan="${nestedRows}"><i class="ui icon large ${{0:'lock open red',1:'lock green',2:'wpforms green',}[v.auth | 0]}"><span>${v.auth | 0}</span></i></td>
+                <td>${v.host}</td>
+                <td>${genForwarderList(v.dest)}</td>
+                <td><button class="ui circular mini basic icon button editBtn"><i class="edit icon"></i></button><button class="ui circular mini basic icon button red editBtn"><i class="trash icon"></i></button></td>`;
+            table.appendChild(row);
+
+            // Generate the secondary rows
+            (v.locations||[]).forEach((vv,ii,aa)=>{
+                const subRow = document.createElement('tr');
+                subRow.innerHTML = `
+                    <td><i class="icon angle right double ${vv.enabled?'green':'red'}"></i>${vv.uri}</td>
+                    <td>${genForwarderList(vv.dest, vv.uri)}</td>`;
+                table.appendChild(subRow);
+            });
+        });
+
+        // Add new record row
+    }
+    // Hooks
+    document.querySelector('button.devButton').addEventListener('click',()=>{
+        listRecords(developmentRecords);
+    });
+
+
+
+    //Virtual directories functions
+    function listVdirs(){
+        return false;
+        $.get("/api/proxy/list?type=vdir", function(data){
+            $("#vdirList").html(``);
+            if (data.error !== undefined){
+                $("#vdirList").append(`<tr>
+                    <td data-label="" colspan="3"><i class="remove icon"></i> ${data.error}</td>
+                </tr>`);
+            }else if (data.length == 0){
+                $("#vdirList").append(`<tr>
+                    <td data-label="" colspan="3"><i class="checkmark icon"></i> No Virtual Directory Record</td>
+                </tr>`);
+            }else{
+                data.forEach(vdir => {
+                    let tlsIcon = "";
+                    let vdirData = encodeURIComponent(JSON.stringify(vdir));
+                    if (vdir.RequireTLS){
+                        tlsIcon = `<i class="green lock icon" title="TLS Mode"></i>`;
+                        if (vdir.SkipCertValidations){
+                            tlsIcon = `<i class="yellow lock icon" title="TLS/SSL mode without verification"></i>`
+                        }
+                    }
+
+                    let tlsVerificationField = "";
+                    if (vdir.RequireTLS){
+                        tlsVerificationField = !vdir.SkipCertValidations?`<i class="ui green check icon"></i>`:`<i class="ui yellow exclamation circle icon" title="TLS/SSL Verification will be skipped on this host"></i>`
+                    }else{
+                        tlsVerificationField = "N/A"
+                    }
+
+                    $("#vdirList").append(`<tr eptuuid="${vdir.RootOrMatchingDomain}" payload="${vdirData}" class="vdirEntry">
+                        <td data-label="" editable="false">${vdir.RootOrMatchingDomain}</td>
+                        <td data-label="" editable="true" datatype="domain">${vdir.Domain} ${tlsIcon}</td>
+                        <td data-label="" editable="true" datatype="basicauth">${vdir.RequireBasicAuth?`<i class="ui green check icon"></i>`:`<i class="ui grey remove icon"></i>`}</td>
+                        <td class="center aligned" editable="true" datatype="action" data-label="">
+                            <button class="ui circular mini basic icon button editBtn" onclick='editEndpoint("vdir","${vdir.RootOrMatchingDomain}")'><i class="edit icon"></i></button>
+                            <button class="ui circular mini red basic icon button"  onclick='deleteEndpoint("vdir","${vdir.RootOrMatchingDomain}")'><i class="trash icon"></i></button>
+                        </td>
+                    </tr>`);
+                });
+            }
+        });
+    }
+})();
+</script>
