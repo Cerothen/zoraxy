@@ -23,11 +23,23 @@ src/*.prof
 
 src/sys.db
 src/src/sys.db.lock
-src/conf/*
+
 src/ReverseProxy_*_*
 src/Zoraxy_*_*
+
+
+
+# Running Directories
+src/conf
+src/conf/*
 src/certs/*
 src/rules/*
+src/log
+src/log/*
+src/www
+src/www/*
+
+src/sys.uuid
 src/README.md
 docker/ContainerTester.sh
 docker/ImagePublisher.sh

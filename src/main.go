@@ -35,6 +35,7 @@ import (
 )
 
 // General flags
+var developFlag = flag.Bool("development", false, "Enable development options")
 var noauth = flag.Bool("noauth", false, "Disable authentication for management interface")
 var showver = flag.Bool("version", false, "Show version of this server")
 var allowSshLoopback = flag.Bool("sshlb", false, "Allow loopback web ssh connection (DANGER)")
@@ -51,7 +52,7 @@ var (
 	name        = "Zoraxy"
 	version     = "2.6.8"
 	nodeUUID    = "generic"
-	development = true //Set this to false to use embedded web fs
+	development = developFlag
 	bootTime    = time.Now().Unix()
 
 	/*
